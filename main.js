@@ -301,25 +301,32 @@ function get_power_matrix(week, num_Teams, teams) {
 	Object.keys(teams).forEach(function(key,index) {
 		var schedule = teams[key].scheduleItems
 		for(var i=0; i<week + 1; i++) { //up until this week, populate power matrix
-			matchup = schedule[i].matchups[0]
-			away_team = [matchup.awayTeamId, matchup.awayTeamScores[0]]
-			home_team = [matchup.homeTeamId, matchup.homeTeamScores[0]]
-			if (key == away_team[0]) {
-				if (away_team[1] > home_team[1]) {
-					win_matrix[teams[away_team[0]].index][teams[home_team[0]].index] += 1
-				}
-				if (away_team[1] == home_team[1]) {
-					win_matrix[teams[away_team[0]].index][teams[home_team[0]].index] += 0.5
-				}
+			matchup = schedule[i].matchups[0];
+			if (matchup.awayTeamScores){
+				away_team = [matchup.awayTeamId, matchup.awayTeamScores[0]]
 			}
-			else if (key == home_team[0]) {
-				if (away_team[1] < home_team[1]) {
-					win_matrix[teams[home_team[0]].index][teams[away_team[0]].index] += 1
-				}
-				if (away_team[1] == home_team[1]) {
-					win_matrix[teams[home_team[0]].index][teams[away_team[0]].index] += 0.5
-				}
+			else{
+				
+				continue
 			}
+				home_team = [matchup.homeTeamId, matchup.homeTeamScores[0]]
+				if (key == away_team[0]) {
+					if (away_team[1] > home_team[1]) {
+						win_matrix[teams[away_team[0]].index][teams[home_team[0]].index] += 1
+					}
+					if (away_team[1] == home_team[1]) {
+						win_matrix[teams[away_team[0]].index][teams[home_team[0]].index] += 0.5
+					}
+				}
+				else if (key == home_team[0]) {
+					if (away_team[1] < home_team[1]) {
+						win_matrix[teams[home_team[0]].index][teams[away_team[0]].index] += 1
+					}
+					if (away_team[1] == home_team[1]) {
+						win_matrix[teams[home_team[0]].index][teams[away_team[0]].index] += 0.5
+					}
+				}
+			
 		}
 	});
 
@@ -368,7 +375,13 @@ function get_average_score(week, num_teams, teams) {
 		var schedule = teams[key].scheduleItems
 		for(var i=0; i<week + 1; i++) {
 			matchup = schedule[i].matchups[0]
-			away_team = [matchup.awayTeamId, matchup.awayTeamScores[0]]
+			if (matchup.awayTeamScores){
+				away_team = [matchup.awayTeamId, matchup.awayTeamScores[0]]
+			}
+			else{
+				average_score[teams[key].index] += 0;
+				continue
+			}
 			home_team = [matchup.homeTeamId, matchup.homeTeamScores[0]]
 			if (key == away_team[0]) {
 				average_score[teams[key].index] += matchup.awayTeamScores[0];
@@ -542,19 +555,21 @@ function simulate_season(team_variables, matchups) {
 	matchups.forEach(function(matchup){
 		var teamId1 = matchup[0];
 		var teamId2 = matchup[1];
-		var teamId1_score = team_variables[teamId1].five_game_avg + randn_bm()*team_variables[teamId1].five_game_std;
-		var teamId2_score = team_variables[teamId2].five_game_avg + randn_bm()*team_variables[teamId2].five_game_std;
-		
-		//add scores and wins
-		team_variables_duplicate[teamId1].pointsFor += teamId1_score;
-		team_variables_duplicate[teamId2].pointsFor += teamId2_score;
-		if (teamId1_score > teamId2_score) {
-			team_variables_duplicate[teamId1].wins += 1;
-			team_variables_duplicate[teamId2].losses += 1;
-		}
-		else {
-			team_variables_duplicate[teamId2].wins +=1;
-			team_variables_duplicate[teamId1].losses += 1;
+		if(team_variables[teamId1]){
+			var teamId1_score = team_variables[teamId1].five_game_avg + randn_bm()*team_variables[teamId1].five_game_std;
+			var teamId2_score = team_variables[teamId2].five_game_avg + randn_bm()*team_variables[teamId2].five_game_std;
+			
+			//add scores and wins
+			team_variables_duplicate[teamId1].pointsFor += teamId1_score;
+			team_variables_duplicate[teamId2].pointsFor += teamId2_score;
+			if (teamId1_score > teamId2_score) {
+				team_variables_duplicate[teamId1].wins += 1;
+				team_variables_duplicate[teamId2].losses += 1;
+			}
+			else {
+				team_variables_duplicate[teamId2].wins +=1;
+				team_variables_duplicate[teamId1].losses += 1;
+			}
 		}
 	});
 
